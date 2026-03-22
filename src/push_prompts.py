@@ -31,7 +31,82 @@ def push_prompt_to_langsmith(prompt_name: str, prompt_data: dict) -> bool:
     Returns:
         True se sucesso, False caso contrário
     """
-    ...
+    try:
+        from langchain_core.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate
+        from langchain_core.prompts import PromptTemplate
+        
+        print(f"📤 Preparando push for '{prompt_name}'...")
+        
+        # Extrair dados do v2
+        system_prompt_text = prompt_data.get('system_prompt', '')
+        user_prompt_text = prompt_data.get('user_prompt', '{bug_report}')
+        description = prompt_data.get('description', '')
+        metadata = prompt_data.get('metadata', {})
+        input_vars = prompt_data.get('input_variables', ['bug_report'])
+        
+        # Validar campos críticos
+        if not system_prompt_text or not user_prompt_text:
+            print("❌ System prompt ou user prompt vazio")
+            return False
+        
+        # Construir ChatPromptTemplate
+        system_template = PromptTemplate(
+            template=system_prompt_text,
+            input_variables=input_vars
+        )
+        
+        user_template = PromptTemplate(
+            template=user_prompt_text,
+            input_variables=input_vars
+        )
+        
+        chat_prompt = ChatPromptTemplate.from_messages([
+            SystemMessagePromptTemplate(prompt=system_template),
+            HumanMessagePromptTemplate(prompt=user_template)
+        ])
+        
+        print("✓ ChatPromptTemplate construído")
+        
+        # Preparer metadados para push
+        techniques = metadata.get('techniques_applied', [])
+        tech_names = [t.get('name', '') for t in techniques if isinstance(t, dict)]
+        
+        # Username do hub
+        username = os.getenv('USERNAME_LANGSMITH_HUB', 'default')
+        repo_name = f"{username}/bug_to_user_story_v2"
+        
+        print(f"📤 Fazendo push para: {repo_name}")
+        print(f"   Técnicas aplicadas: {', '.join(tech_names)}")
+        print(f"   Descrição: {description[:60]}...")
+        
+        # Fazer push do prompt (será automaticamente público)
+        try:
+            hub.push(repo_name, chat_prompt)
+            final_repo = repo_name
+        except Exception as inner_e:
+            if "Cannot create a prompt for another tenant" in str(inner_e):
+                fallback_name = prompt_name
+                print(f"⚠️ Erro de tenant detectado. Tentando push para o tenant atual com '{fallback_name}'...")
+                hub.push(fallback_name, chat_prompt)
+                final_repo = fallback_name
+            else:
+                raise
+
+        print(f"✓ Push completado com sucesso!")
+        print(f"\n📍 Acesse seu prompt em:")
+        print(f"   https://smith.langchain.com/hub/{final_repo}")
+
+        return True
+        
+    except Exception as e:
+        print(f"❌ Erro ao fazer push: {str(e)}")
+        print("\nDicas de debug:")
+        print("  1. Verifique se LANGSMITH_API_KEY está correto")
+        print("  2. Confirme USERNAME_LANGSMITH_HUB está definido")
+        print("  3. Verifique sua conexão com a internet")
+        import traceback
+        traceback.print_exc()
+        return False
 
 
 def validate_prompt(prompt_data: dict) -> tuple[bool, list]:
@@ -44,12 +119,86 @@ def validate_prompt(prompt_data: dict) -> tuple[bool, list]:
     Returns:
         (is_valid, errors) - Tupla com status e lista de erros
     """
-    ...
+    errors = []
+    
+    # Campos obrigatórios
+    required_fields = ['description', 'system_prompt', 'user_prompt', 'version', 'metadata']
+    for field in required_fields:
+        if field not in prompt_data:
+            errors.append(f"Campo obrigatório faltando: {field}")
+    
+    # Validar system_prompt
+    system_prompt = prompt_data.get('system_prompt', '').strip()
+    if not system_prompt:
+        errors.append("system_prompt está vazio")
+    
+    if 'TODO' in system_prompt:
+        errors.append("system_prompt ainda contém TODOs")
+    
+    # Validar user_prompt
+    user_prompt = prompt_data.get('user_prompt', '').strip()
+    if not user_prompt:
+        errors.append("user_prompt está vazio")
+    
+    # Validar técnicas aplicadas
+    metadata = prompt_data.get('metadata', {})
+    techniques = metadata.get('techniques_applied', [])
+    if len(techniques) < 2:
+        errors.append(f"Mínimo de 2 técnicas requeridas, encontradas: {len(techniques)}")
+    
+    return (len(errors) == 0, errors)
 
 
 def main():
     """Função principal"""
-    ...
+    # Verificar env vars
+    required_vars = ['LANGSMITH_API_KEY', 'USERNAME_LANGSMITH_HUB']
+    if not check_env_vars(required_vars):
+        return 1
+    
+    print_section_header("PUSHING OTIMIZED PROMPTS TO LANGSMITH HUB")
+    
+    # Ler arquivo YAML com prompts v2
+    from pathlib import Path
+    v2_path = str(Path(__file__).parent.parent / "prompts" / "bug_to_user_story_v2.yml")
+    
+    print(f"📖 Lendo prompts otimizados de: {v2_path}")
+    prompt_data = load_yaml(v2_path)
+    
+    if not prompt_data:
+        print("❌ Falha ao carregar arquivo v2")
+        return 1
+    
+    # Extrair dados do v2
+    prompt_v2_data = prompt_data.get('bug_to_user_story_v2', {})
+    
+    if not prompt_v2_data:
+        print("❌ Chave 'bug_to_user_story_v2' não encontrada no YAML")
+        return 1
+    
+    print("✓ Arquivo v2 carregado")
+    
+    # Validar prompts
+    print("\n🔍 Validando estrutura do prompt...")
+    is_valid, errors = validate_prompt(prompt_v2_data)
+    
+    if not is_valid:
+        print("❌ Validação falhou:")
+        for error in errors:
+            print(f"   - {error}")
+        return 1
+    
+    print("✓ Validação bem-sucedida")
+    
+    # Fazer push
+    success = push_prompt_to_langsmith('bug_to_user_story_v2', prompt_v2_data)
+    
+    if success:
+        print(f"\n✅ Todos os prompts foram publicados com sucesso!")
+        return 0
+    else:
+        print(f"\n❌ Falha ao fazer push dos prompts")
+        return 1
 
 
 if __name__ == "__main__":

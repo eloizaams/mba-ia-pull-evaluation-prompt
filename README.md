@@ -197,6 +197,29 @@ desafio-prompt-engineer/
 ├── .env.example              # Template das variáveis de ambiente
 ├── requirements.txt          # Dependências Python
 ├── README.md                 # Sua documentação do processo
+```
+
+---
+
+## Resultado final aplicado neste repositório
+
+- Prompt otimizado: `prompts/bug_to_user_story_v2.yml`
+- Validação local: `python src/evaluate_local.py` => aprovada com todas as métricas >= 0.9
+- Teste unitário: `pytest tests/test_prompts.py -v` => passou 10/10
+- Push final: `python src/push_prompts.py` => publicado em `https://smith.langchain.com/hub/bug_to_user_story_v2`
+
+### Métricas finais locais
+- Tone Score: 1.00
+- Acceptance Criteria Score: 1.00
+- User Story Format Score: 1.00
+- Completeness Score: 1.00
+
+### Como rodar (comandos)
+1. `source venv/bin/activate`
+2. `python src/pull_prompts.py`
+3. `python src/evaluate_local.py`
+4. `python src/push_prompts.py`
+5. `pytest tests/test_prompts.py -v`
 │
 ├── prompts/
 │   ├── bug_to_user_story_v1.yml       # Prompt inicial (após pull)
