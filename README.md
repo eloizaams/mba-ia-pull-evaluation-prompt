@@ -214,12 +214,38 @@ desafio-prompt-engineer/
 - User Story Format Score: 1.00
 - Completeness Score: 1.00
 
+### 🎯 Dashboard do LangSmith com Avaliações
+
+#### Prompt Otimizado no Hub
+- **Link do Prompt**: [https://smith.langchain.com/hub/bug_to_user_story_v2](https://smith.langchain.com/hub/bug_to_user_story_v2)
+- **Acesso público**: Sim ✅
+- **Versão**: v2 com técnicas avançadas aplicadas
+
+#### Dataset de Avaliação
+- **Nome do Dataset**: `prompt-optimization-challenge-resolved-eval`
+- **Total de exemplos**: 15 bugs de teste
+- **Localização no LangSmith**: 
+  - Acesse: [https://smith.langchain.com](https://smith.langchain.com)
+  - Navigate até: Datasets → `prompt-optimization-challenge-resolved-eval`
+  - Ou acesse diretamente através da org/workspace no painel de controle
+
+#### Como acessar o Dashboard completo
+1. Faça login em [https://smith.langchain.com](https://smith.langchain.com)
+2. No menu lateral, acesse **"Datasets"**
+3. Procure por **"prompt-optimization-challenge-resolved-eval"**
+4. Clique no dataset para ver:
+   - All 15 test cases executados
+   - Histórico de avaliações por prompt
+   - Métricas (F1-Score, Clarity, Precision)
+   - Comparativo de versões (v1 vs v2)
+
 ### Como rodar (comandos)
 1. `source venv/bin/activate`
 2. `python src/pull_prompts.py`
 3. `python src/evaluate_local.py`
 4. `python src/push_prompts.py`
-5. `pytest tests/test_prompts.py -v`
+5. `python src/evaluate.py` (cria dataset e avaliações no LangSmith)
+6. `pytest tests/test_prompts.py -v`
 │
 ├── prompts/
 │   ├── bug_to_user_story_v1.yml       # Prompt inicial (após pull)
