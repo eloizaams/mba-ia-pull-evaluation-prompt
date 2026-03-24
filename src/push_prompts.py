@@ -15,9 +15,47 @@ import sys
 from dotenv import load_dotenv
 from langchain import hub
 from langchain_core.prompts import ChatPromptTemplate
+from langsmith import Client
 from utils import load_yaml, check_env_vars, print_section_header
 
 load_dotenv()
+
+
+def update_repo_visibility(username: str, repo_name: str, private: bool = False) -> bool:
+    """
+    Atualiza a visibilidade de um repositório no LangSmith.
+    
+    Args:
+        username: Username no LangSmith Hub
+        repo_name: Nome do repositório (ex: 'bug_to_user_story_v2')
+        private: False para público, True para privado
+    
+    Returns:
+        True se sucesso, False caso contrário
+    """
+    try:
+        client = Client()
+        
+        # Formato requerido: "{owner}/{repo}"
+        full_repo_name = f"{username}/{repo_name}"
+        
+        print(f"🔄 Atualizando visibilidade de '{full_repo_name}'...")
+        
+        # Chamar método de atualização do repositório
+        client.update_repo(
+            repo_name=full_repo_name,
+            private=private
+        )
+        
+        status = "PRIVADO" if private else "PÚBLICO"
+        print(f"✓ Repositório '{full_repo_name}' agora está {status}")
+        print(f"📍 Acesse em: https://smith.langchain.com/hub/{full_repo_name}")
+        
+        return True
+        
+    except Exception as e:
+        print(f"❌ Erro ao atualizar visibilidade: {e}")
+        return False
 
 
 def push_prompt_to_langsmith(prompt_name: str, prompt_data: dict) -> bool:
@@ -79,20 +117,42 @@ def push_prompt_to_langsmith(prompt_name: str, prompt_data: dict) -> bool:
         print(f"   Técnicas aplicadas: {', '.join(tech_names)}")
         print(f"   Descrição: {description[:60]}...")
         
-        # Fazer push do prompt (será automaticamente público)
+        # Criar repo público primeiro
+        client = Client()
         try:
-            hub.push(repo_name, chat_prompt)
+            client.create_repo(repo_name, description=description, is_public=True)
+            print("✓ Repo público criado")
+        except Exception as e:
+            print(f"⚠️ Repo já existe ou erro ao criar: {e}")
+        
+        # Fazer push do prompt
+        try:
+            client.push_prompt(repo_name, chat_prompt)
             final_repo = repo_name
         except Exception as inner_e:
             if "Cannot create a prompt for another tenant" in str(inner_e):
                 fallback_name = prompt_name
                 print(f"⚠️ Erro de tenant detectado. Tentando push para o tenant atual com '{fallback_name}'...")
-                hub.push(fallback_name, chat_prompt)
+                try:
+                    client.create_repo(fallback_name, description=description, is_public=True)
+                except:
+                    pass
+                client.push_prompt(fallback_name, chat_prompt)
                 final_repo = fallback_name
             else:
                 raise
 
         print(f"✓ Push completado com sucesso!")
+        
+        # # Atualizar visibilidade para público - removido pois is_public=True no push
+        # if "/" in final_repo:
+        #     owner, repo = final_repo.split("/", 1)
+        # else:
+        #     owner = username  # fallback case
+        #     repo = final_repo
+        # 
+        # update_repo_visibility(owner, repo, private=False)
+        
         print(f"\n📍 Acesse seu prompt em:")
         print(f"   https://smith.langchain.com/hub/{final_repo}")
 

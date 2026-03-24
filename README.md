@@ -219,20 +219,29 @@ desafio-prompt-engineer/
 #### Prompt Otimizado no Hub
 - **Link do Prompt (versão principal)**: [https://smith.langchain.com/hub/bug_to_user_story_v2](https://smith.langchain.com/hub/bug_to_user_story_v2)
 - **Link alternativo**: [https://smith.langchain.com/hub/leonanluppi/bug_to_user_story_v2](https://smith.langchain.com/hub/leonanluppi/bug_to_user_story_v2)
-- **Acesso público**: Sim ✅ (teste ambos os links se o primeiro não aparecer)
+- **Link fallback do tenant atual**: [https://smith.langchain.com/hub/Personal/bug_to_user_story_v2](https://smith.langchain.com/hub/Personal/bug_to_user_story_v2)
+- **Acesso público**: Sim ✅ (a resposta do script foi que já está disponível publicamente)
 - **Versão**: v2 com técnicas avançadas aplicadas
 
 #### Dataset de Avaliação
 - **Nome do Dataset**: `prompt-optimization-challenge-resolved-eval`
 - **Total de exemplos**: 15 bugs de teste
 - **Link direto para o Dashboard**: 
-  [https://smith.langchain.com/datasets/09408cae-2728-4511-a267-de61f755d1a5](https://smith.langchain.com/datasets/09408cae-2728-4511-a267-de61f755d1a5)
+  [https://smith.langchain.com/datasets/6a2b530b-1953-4ecd-be0f-dbd5682c3db3](https://smith.langchain.com/datasets/6a2b530b-1953-4ecd-be0f-dbd5682c3db3)
 
 **Acesse o link acima para visualizar:**
 - ✅ 15 exemplos de teste (bug reports)
 - ✅ Métricas de avaliação (F1-Score, Clarity, Precision)
 - ✅ Respostas do prompt v2
 - ✅ Histórico de avaliações
+
+### Checklist de entrega
+- [x] Pull do prompt v1 concluído (`src/pull_prompts.py`)
+- [x] Refatoração do prompt (`prompts/bug_to_user_story_v2.yml`)
+- [x] Testes unitários aprovados (`pytest tests/test_prompts.py -v`)
+- [x] validação local aprovada (`python src/evaluate_local.py`)
+- [x] Push para LangSmith concluído (`src/push_prompts.py`)
+- [x] Avaliação de dataset criado (`src/evaluate.py`) com setup feito
 
 ### Como rodar (comandos)
 1. `source venv/bin/activate`
