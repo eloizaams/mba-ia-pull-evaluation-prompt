@@ -217,8 +217,9 @@ desafio-prompt-engineer/
 ### 🎯 Dashboard do LangSmith com Avaliações
 
 #### Prompt Otimizado no Hub
-- **Link do Prompt**: [https://smith.langchain.com/hub/bug_to_user_story_v2](https://smith.langchain.com/hub/bug_to_user_story_v2)
-- **Acesso público**: Sim ✅
+- **Link do Prompt (versão principal)**: [https://smith.langchain.com/hub/bug_to_user_story_v2](https://smith.langchain.com/hub/bug_to_user_story_v2)
+- **Link alternativo**: [https://smith.langchain.com/hub/leonanluppi/bug_to_user_story_v2](https://smith.langchain.com/hub/leonanluppi/bug_to_user_story_v2)
+- **Acesso público**: Sim ✅ (teste ambos os links se o primeiro não aparecer)
 - **Versão**: v2 com técnicas avançadas aplicadas
 
 #### Dataset de Avaliação
