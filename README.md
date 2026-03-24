@@ -89,47 +89,140 @@ from langchain_google_genai import ChatGoogleGenerativeAI  # LLM Gemini
 
 ---
 
+---
+
+## Técnicas Aplicadas (Fase 2)
+
+A versão otimizada do prompt (`bug_to_user_story_v2.yml`) foi desenvolvida aplicando as seguintes técnicas avançadas de Prompt Engineering:
+
+### 1. **Few-shot Learning** ⭐
+**O que é:** Fornecer exemplos claros de entrada/saída para guiar o modelo.
+
+**Como foi aplicado:**
+- Inclusos **3 exemplos reais** de transformação bug → user story
+- Cada exemplo mostra:
+  - O bug report original
+  - A user story bem estruturada resultante
+  - Os critérios de aceitação completos
+  - Context (domínio, complexidade, tipo)
+
+**Por quê:** O modelo aprende pelo exemplo. Ver 3 transformações bem-feitas reduz ambigüidade e garante consistência no formato de saída.
+
+---
+
+### 2. **Chain of Thought (CoT)** ⭐
+**O que é:** Instruir o modelo a "pensar passo a passo" antes de gerar a resposta.
+
+**Como foi aplicado:**
+- Adicionada seção "PASSO-A-PASSO DE ANÁLISE" no system prompt
+- 6 passos estruturados:
+  1. Ler o bug e identificar problema/onde/quem
+  2. Determinar a persona do usuário
+  3. Extrair o valor/benefício
+  4. Definir domínio e complexidade
+  5. Estruturar critérios de aceitação logicamente
+  6. Revisar cases edge e cenários alternativos
+
+**Por quê:** CoT melhora a qualidade de respostas complexas ao forçar raciocínio explícito, reduzindo erros lógicos.
+
+---
+
+### 3. **Role Prompting**
+**O que é:** Definir uma persona clara e contexto detalhado.
+
+**Como foi aplicado:**
+- Sistema posicionado como "Senior Product Manager especializado em transformar bugs em User Stories"
+- Responsabilidade clara: garantir User Stories "claras, acionáveis e bem documentadas"
+- Conhecimento de domínios específicos (e-commerce, saas, mobile)
+
+**Por quê:** Role Prompting aumenta a qualidade e profundidade das respostas ao alinhar o LLM com um contexto específico.
+
+---
+
+### 4. **Skeleton of Thought**
+**O que é:** Estruturar a resposta em seções claras e bem definidas.
+
+**Como foi aplicado:**
+- Resposta segue estrutura obrigatória de 5 seções:
+  1. Análise do Bug (identifica problema, contexto, persona, domínio)
+  2. User Story (formato "Como... eu quero... para que...")
+  3. Critérios de Aceitação (formato Given-When-Then)
+  4. Tratamento de Edge Cases
+  5. Observações Importantes (notas para desenvolvedores)
+
+**Por quê:** Estrutura fixa previne outputs caóticos e garante que todas as informações necessárias sejam incluídas.
+
+---
+
+### 5. **Regras Explícitas de Comportamento**
+**Adicionadas:**
+- ✓ Sempre usar formato "Como um... eu quero... para que..."
+- ✓ Mínimo de 5 Critérios de Aceitação em formato Given-When-Then
+- ✓ Identificar domínio e complexidade
+- ✓ Tratar casos especiais (navegador, dispositivo, versão)
+- ✓ Priorizar clareza e objetividade (cada critério deve ser testável)
+
+---
+
 ## Requisitos
 
 ### 1. Pull dos Prompt inicial do LangSmith
 
-O repositório base já contém prompts de **baixa qualidade** publicados no LangSmith Prompt Hub. Sua primeira tarefa é criar o código capaz de fazer o pull desses prompts para o seu ambiente local.
+✓ **FASE 1 COMPLETADA**
 
-**Tarefas:**
+**O que foi feito:**
 
-1. Configurar suas credenciais do LangSmith no arquivo `.env` (conforme instruções no `README.md` do repositório base)
-2. Acessar o script `src/pull_prompts.py` que:
-   - Conecta ao LangSmith usando suas credenciais
-   - Faz pull do seguinte prompts:
-     - `leonanluppi/bug_to_user_story_v1`
-   - Salva os prompts localmente em `prompts/raw_prompts.yml`
+1. ✓ Configuradas credenciais do LangSmith no arquivo `.env`
+2. ✓ Script `src/pull_prompts.py` implementado com sucesso
+   - ✓ Conecta ao LangSmith usando API Key do `.env`
+   - ✓ Faz pull do prompt `leonanluppi/bug_to_user_story_v1` do Hub
+   - ✓ Salva em `prompts/bug_to_user_story_v1.yml` em formato YAML estruturado
+   - ✓ Validação de variáveis de ambiente
+   - ✓ Mensagens de feedback ao usuário
+
+**Como executar:**
+```bash
+python src/pull_prompts.py
+```
+
+**Output esperado:**
+- Prompt puxado com sucesso do LangSmith
+- Salvo em `prompts/bug_to_user_story_v1.yml`
+- Pronto para otimização
 
 ---
 
 ### 2. Otimização do Prompt
 
-Agora que você tem o prompt inicial, é hora de refatorá-lo usando as técnicas de prompt aprendidas no curso.
+A versão otimizada foi criada em `prompts/bug_to_user_story_v2.yml` aplicando **4 técnicas avançadas** de Prompt Engineering:
 
-**Tarefas:**
+**✓ Tarefas Completadas:**
 
-1. Analisar o prompt em `prompts/bug_to_user_story_v1.yml`
-2. Criar um novo arquivo `prompts/bug_to_user_story_v2.yml` com suas versões otimizadas
-3. Aplicar **pelo menos duas** das seguintes técnicas:
-   - **Few-shot Learning**: Fornecer exemplos claros de entrada/saída
-   - **Chain of Thought (CoT)**: Instruir o modelo a "pensar passo a passo"
-   - **Tree of Thought**: Explorar múltiplos caminhos de raciocínio
-   - **Skeleton of Thought**: Estruturar a resposta em etapas claras
-   - **ReAct**: Raciocínio + Ação para tarefas complexas
-   - **Role Prompting**: Definir persona e contexto detalhado
-4. Documentar no `README.md` quais técnicas você escolheu e por quê
+1. ✓ Analisar o prompt em `prompts/bug_to_user_story_v1.yml` - Identificamos que era muito genérico e vago
+2. ✓ Criar arquivo `prompts/bug_to_user_story_v2.yml` com versões otimizadas - **Arquivo criado com sucesso**
+3. ✓ Aplicar técnicas avançadas:
+   - ✓ **Few-shot Learning**: 3 exemplos reais de transformação bug → user story
+   - ✓ **Chain of Thought (CoT)**: 6 passos estruturados de análise
+   - ✓ **Role Prompting**: Persona de Senior Product Manager
+   - ✓ **Skeleton of Thought**: Estrutura clara em 5 seções de resposta
+4. ✓ Documentar técnicas no `README.md` - **Documentação adicionada acima**
 
-**Requisitos do prompt otimizado:**
+**Requisitos do Prompt Otimizado - Todos Atendidos:**
+- ✓ **Instruções claras e específicas**: System prompt detalha passo-a-passo de análise
+- ✓ **Regras explícitas de comportamento**: Seção "REGRAS OBRIGATÓRIAS" com 5 regras
+- ✓ **Exemplos de entrada/saída (Few-shot)**: 3 exemplos completos inclusos
+- ✓ **Tratamento de edge cases**: Seção "TRATAMENTO DE EDGE CASES" nas respostas esperadas
+- ✓ **System vs User Prompt adequadamente**:
+  - System Prompt: Define role, regras, passo-a-passo, exemplos
+  - User Prompt: Input do usuário + estrutura esperada da respota
 
-- Deve conter **instruções claras e específicas**
-- Deve incluir **regras explícitas** de comportamento
-- Deve ter **exemplos de entrada/saída** (Few-shot)
-- Deve incluir **tratamento de edge cases**
-- Deve usar **System vs User Prompt** adequadamente
+**Estrutura do Prompt Otimizado:**
+```yaml
+bug_to_user_story_v2:
+  system_prompt: "Role (Senior PM) + Regras + Passo-a-passo + 3 Exemplos"
+  user_prompt: "Input do bug + Estrutura esperada (Skeleton of Thought)"
+  metadata: "Técnicas, autor, métricas esperadas"
+```
 
 ---
 
