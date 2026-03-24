@@ -224,20 +224,14 @@ desafio-prompt-engineer/
 #### Dataset de Avaliação
 - **Nome do Dataset**: `prompt-optimization-challenge-resolved-eval`
 - **Total de exemplos**: 15 bugs de teste
-- **Localização no LangSmith**: 
-  - Acesse: [https://smith.langchain.com](https://smith.langchain.com)
-  - Navigate até: Datasets → `prompt-optimization-challenge-resolved-eval`
-  - Ou acesse diretamente através da org/workspace no painel de controle
+- **Link direto para o Dashboard**: 
+  [https://smith.langchain.com/datasets/09408cae-2728-4511-a267-de61f755d1a5](https://smith.langchain.com/datasets/09408cae-2728-4511-a267-de61f755d1a5)
 
-#### Como acessar o Dashboard completo
-1. Faça login em [https://smith.langchain.com](https://smith.langchain.com)
-2. No menu lateral, acesse **"Datasets"**
-3. Procure por **"prompt-optimization-challenge-resolved-eval"**
-4. Clique no dataset para ver:
-   - All 15 test cases executados
-   - Histórico de avaliações por prompt
-   - Métricas (F1-Score, Clarity, Precision)
-   - Comparativo de versões (v1 vs v2)
+**Acesse o link acima para visualizar:**
+- ✅ 15 exemplos de teste (bug reports)
+- ✅ Métricas de avaliação (F1-Score, Clarity, Precision)
+- ✅ Respostas do prompt v2
+- ✅ Histórico de avaliações
 
 ### Como rodar (comandos)
 1. `source venv/bin/activate`
