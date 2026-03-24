@@ -228,17 +228,36 @@ bug_to_user_story_v2:
 
 ### 3. Push e Avaliação
 
-Após refatorar os prompts, você deve enviá-los de volta ao LangSmith Prompt Hub.
+✅ **FASE 3 COMPLETADA - Push Automático com Sucesso!**
 
-**Tarefas:**
+**O que foi feito:**
 
-1. Criar o script `src/push_prompts.py` que:
-   - Lê os prompts otimizados de `prompts/bug_to_user_story_v2.yml`
-   - Faz push para o LangSmith com nomes versionados:
-     - `{seu_username}/bug_to_user_story_v2`
-   - Adiciona metadados (tags, descrição, técnicas utilizadas)
-2. Executar o script e verificar no dashboard do LangSmith se os prompts foram publicados
-3. Deixa-lo público
+1. ✅ Script `src/push_prompts.py` implementado com sucesso
+   - ✓ Lê prompts otimizados de `prompts/bug_to_user_story_v2.yml`
+   - ✓ Valida estrutura do prompt
+   - ✓ Cria ChatPromptTemplate do LangChain
+   - ✓ Faz push automático para LangSmith Hub
+   - ✓ Adiciona metadados (tags, descrição, técnicas)
+
+2. ✅ Prompt publicado com sucesso no LangSmith Hub
+   - ✓ Handle criado: `eloiza-souza`
+   - ✓ Prompt: `bug_to_user_story_v2`
+   - ✓ URL: https://smith.langchain.com/hub/eloiza-souza/bug_to_user_story_v2
+   - ✓ Status: PUBLIC
+
+**Como executar o push:**
+
+```bash
+# Push automático (agora funciona perfeitamente!)
+python src/push_prompts.py
+```
+
+**Próxima etapa: Fase 4 - Avaliação**
+
+Agora que o prompt está publicado, execute a avaliação:
+```bash
+python src/evaluate.py
+```
 
 ---
 
@@ -340,28 +359,189 @@ pip install -r requirements.txt
 
 ---
 
-## Ordem de execução
+## Como Executar
 
-### 1. Executar pull dos prompts ruins
+### Pré-requisitos
+
+1. **Python 3.9+** instalado
+2. **Git** para versionamento
+3. **API Keys configuradas:**
+   - OpenAI API Key (para gpt-4o-mini e gpt-4o)
+   - LangSmith API Key (para Pull/Push/Avaliação)
+
+### Dependências
+
+Instale as dependências do projeto:
+
+```bash
+# Criar ambiente virtual
+python3 -m venv venv
+source venv/bin/activate  # No Windows: venv\Scripts\activate
+
+# Instalar pacotes
+pip install -r requirements.txt
+```
+
+### Configuração do Ambiente
+
+1. Copie o arquivo `.env.example` para `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Preencha as variáveis no `.env`:
+   ```bash
+   # LangSmith
+   LANGSMITH_API_KEY=lsv2_pt_xxxxx
+   LANGSMITH_PROJECT="Seu projeto"
+   USERNAME_LANGSMITH_HUB=seu-username
+   
+   # OpenAI
+   OPENAI_API_KEY=sk-proj-xxxxx
+   LLM_PROVIDER=openai
+   LLM_MODEL=gpt-4o-mini
+   EVAL_MODEL=gpt-4o
+   ```
+
+### Fase 1: Pull dos Prompts Iniciais
+
+Puxe os prompts de baixa qualidade do LangSmith Hub:
 
 ```bash
 python src/pull_prompts.py
 ```
 
-### 2. Refatorar prompts
+**Resultado esperado:**
+- Arquivo `prompts/bug_to_user_story_v1.yml` criado
+- Containendo o prompt original com baixa qualidade
 
-Edite manualmente o arquivo `prompts/bug_to_user_story_v2.yml` aplicando as técnicas aprendidas no curso.
+### Fase 2: Otimizar Prompts
 
-### 3. Fazer push dos prompts otimizados
+Edite o arquivo `prompts/bug_to_user_story_v2.yml` aplicando técnicas de Prompt Engineering:
+
+```bash
+# (Editor: nano, vim, VS Code, etc)
+nano prompts/bug_to_user_story_v2.yml
+```
+
+**Técnicas a aplicar (mínimo 2):**
+- Few-shot Learning (exemplos claros)
+- Chain of Thought (raciocínio passo a passo)
+- Role Prompting (definir persona)
+- Skeleton of Thought (estrutura clara)
+
+### Fase 3: Testar Validações
+
+Execute os testes de validação do prompt:
+
+```bash
+pytest tests/test_prompts.py -v
+```
+
+**6 testes executados:**
+- ✓ System prompt existe
+- ✓ Persona/role definida
+- ✓ Formato de User Story mencionado
+- ✓ Exemplos Few-shot inclusos
+- ✓ Nenhum [TODO] pendente
+- ✓ Mínimo 2 técnicas listadas
+
+### Fase 4: Push para LangSmith
+
+Publique o prompt otimizado no LangSmith Hub:
 
 ```bash
 python src/push_prompts.py
 ```
 
-### 5. Executar avaliação
+**Resultado esperado:**
+- Prompt publicado em: `https://smith.langchain.com/hub/{seu-username}/bug_to_user_story_v2`
+- Dataset criado no LangSmith
+
+### Fase 5: Executar Avaliação
+
+Avalie a qualidade do prompt otimizado:
 
 ```bash
 python src/evaluate.py
+```
+
+**Métricas calculadas:**
+- F1-Score (balanceamento entre precision e recall)
+- Clarity (estrutura e clareza)
+- Precision (informações corretas e relevantes)
+- Helpfulness (média de Clarity + Precision)
+- Correctness (média de F1 + Precision)
+
+**Critério de aprovação:** Todas as métricas >= 0.9
+
+### Iteração (se necessário)
+
+Se alguma métrica estiver abaixo de 0.9:
+
+1. Analise os erros no tracing da LangSmith
+2. Edite `prompts/bug_to_user_story_v2.yml` com melhorias
+3. Execute push novamente: `python src/push_prompts.py`
+4. Avalie: `python src/evaluate.py`
+5. Repita até atingir 0.9 em todas as métricas
+
+---
+
+## Resultados Finais
+
+### Dashboard LangSmith
+
+**Prompt Publicado:** [eloiza-souza/bug_to_user_story_v2](https://smith.langchain.com/hub/eloiza-souza/bug_to_user_story_v2)
+
+### Métricas Obtidas
+
+#### Avaliação v2 (Prompt Otimizado)
+
+| Métrica           | Score | Limiar | Status |
+|-------------------|-------|--------|--------|
+| F1-Score          | 0.77  | 0.90   | ⚠️ -0.13 |
+| Clarity           | 0.88  | 0.90   | ⚠️ -0.02 |
+| Precision         | 0.89  | 0.90   | ⚠️ -0.01 |
+| Helpfulness       | 0.89  | 0.90   | ⚠️ -0.01 |
+| Correctness       | 0.83  | 0.90   | ⚠️ -0.07 |
+
+### Comparação: v1 vs v2
+
+| Aspecto               | v1 Original | v2 Otimizado | Melhoria |
+|----------------------|-----------|------------|----------|
+| **F1-Score médio**   | ~0.62     | 0.77       | +0.15 (+24%) |
+| **Clarity médio**    | ~0.68     | 0.88       | +0.20 (+29%) |
+| **Precision médio**  | ~0.70     | 0.89       | +0.19 (+27%) |
+| **Estrutura**        | Genérica  | 5 seções   | ✅ Estruturada |
+| **Exemplos**         | 0         | 3          | ✅ Few-shot |
+| **Raciocínio**       | Implícito | 6 passos   | ✅ Explícito |
+| **Persona**          | Indefinida| Senior PM  | ✅ Definida |
+
+### Análise
+
+**Pontos Fortes da v2:**
+- ✅ Melhoria significativa em todas as métricas (24-29%)
+- ✅ Estrutura clara e bem definida
+- ✅ Persona de Senior Product Manager bem estabelecida
+- ✅ 3 exemplos reais de transformação bug→user story
+- ✅ 6 passos estruturados de análise (Chain of Thought)
+
+**Próximos Passos:**
+A v2 atingiu ~0.85-0.89 em média. Para atingir 0.90+:
+- Aumentar completude (F1-Score: adicionar validação de cobertura)
+- Reforçar estrutura obrigatória (Clarity: validar 5 seções)
+- Restringir escopo (Precision: apenas informações derivadas do bug)
+
+### Testes de Validação
+
+✅ **Todos os 6 testes passando:**
+```
+tests/test_prompts.py::TestPrompts::test_prompt_has_system_prompt PASSED
+tests/test_prompts.py::TestPrompts::test_prompt_has_role_definition PASSED
+tests/test_prompts.py::TestPrompts::test_prompt_mentions_format PASSED
+tests/test_prompts.py::TestPrompts::test_prompt_has_few_shot_examples PASSED
+tests/test_prompts.py::TestPrompts::test_prompt_no_todos PASSED
+tests/test_prompts.py::TestPrompts::test_minimum_techniques PASSED
 ```
 
 ---
