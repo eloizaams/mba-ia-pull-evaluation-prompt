@@ -186,6 +186,7 @@ O objetivo de **atingir ≥ 0.90 em todas as 4 métricas foi alcançado com suce
 ## 📎 Links de Referência
 
 - **LangSmith Hub:** https://smith.langchain.com/hub/eloiza-souza/bug_to_user_story_v2
+- **Dashboard Público de Avaliação (R17):** https://smith.langchain.com/o/094c48d0-a048-4983-a7aa-47b14f5297b4/datasets/57642db8-5147-4270-8692-d71745148b97/compare?selectedSessions=db179fc2-6dc5-4a98-a48d-489733c99695
 - **Dataset:** `datasets/bug_to_user_story.jsonl` (15 exemplos)
 - **Código:** `src/evaluate.py`, `src/metrics.py`, `src/push_prompts.py`
 - **Repositório:** `mba-ia-pull-evaluation-prompt/`
