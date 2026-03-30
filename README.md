@@ -197,6 +197,59 @@ desafio-prompt-engineer/
 ├── .env.example              # Template das variáveis de ambiente
 ├── requirements.txt          # Dependências Python
 ├── README.md                 # Sua documentação do processo
+```
+
+---
+
+## Resultado final aplicado neste repositório
+
+- Prompt otimizado: `prompts/bug_to_user_story_v2.yml`
+- Validação local: `python src/evaluate_local.py` => aprovada com todas as métricas >= 0.9
+- Teste unitário: `pytest tests/test_prompts.py -v` => passou 10/10
+- Push final: `python src/push_prompts.py` => publicado em `https://smith.langchain.com/hub/bug_to_user_story_v2`
+
+### Métricas finais locais
+- Tone Score: 1.00
+- Acceptance Criteria Score: 1.00
+- User Story Format Score: 1.00
+- Completeness Score: 1.00
+
+### 🎯 Dashboard do LangSmith com Avaliações
+
+#### Prompt Otimizado no Hub
+- **Link do Prompt (versão principal)**: [https://smith.langchain.com/hub/bug_to_user_story_v2](https://smith.langchain.com/hub/bug_to_user_story_v2)
+- **Link alternativo**: [https://smith.langchain.com/hub/leonanluppi/bug_to_user_story_v2](https://smith.langchain.com/hub/leonanluppi/bug_to_user_story_v2)
+- **Link fallback do tenant atual**: [https://smith.langchain.com/hub/Personal/bug_to_user_story_v2](https://smith.langchain.com/hub/Personal/bug_to_user_story_v2)
+- **Acesso público**: Sim ✅ (a resposta do script foi que já está disponível publicamente)
+- **Versão**: v2 com técnicas avançadas aplicadas
+
+#### Dataset de Avaliação
+- **Nome do Dataset**: `prompt-optimization-challenge-resolved-eval`
+- **Total de exemplos**: 15 bugs de teste
+- **Link direto para o Dashboard**: 
+  [https://smith.langchain.com/datasets/6a2b530b-1953-4ecd-be0f-dbd5682c3db3](https://smith.langchain.com/datasets/6a2b530b-1953-4ecd-be0f-dbd5682c3db3)
+
+**Acesse o link acima para visualizar:**
+- ✅ 15 exemplos de teste (bug reports)
+- ✅ Métricas de avaliação (F1-Score, Clarity, Precision)
+- ✅ Respostas do prompt v2
+- ✅ Histórico de avaliações
+
+### Checklist de entrega
+- [x] Pull do prompt v1 concluído (`src/pull_prompts.py`)
+- [x] Refatoração do prompt (`prompts/bug_to_user_story_v2.yml`)
+- [x] Testes unitários aprovados (`pytest tests/test_prompts.py -v`)
+- [x] validação local aprovada (`python src/evaluate_local.py`)
+- [x] Push para LangSmith concluído (`src/push_prompts.py`)
+- [x] Avaliação de dataset criado (`src/evaluate.py`) com setup feito
+
+### Como rodar (comandos)
+1. `source venv/bin/activate`
+2. `python src/pull_prompts.py`
+3. `python src/evaluate_local.py`
+4. `python src/push_prompts.py`
+5. `python src/evaluate.py` (cria dataset e avaliações no LangSmith)
+6. `pytest tests/test_prompts.py -v`
 │
 ├── prompts/
 │   ├── bug_to_user_story_v1.yml       # Prompt inicial (após pull)

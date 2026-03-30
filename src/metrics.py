@@ -333,365 +333,114 @@ NÃO adicione nenhum texto antes ou depois do JSON.
 
 def evaluate_tone_score(bug_report: str, user_story: str, reference: str) -> Dict[str, Any]:
     """
-    Avalia o tom da user story (profissional e empático).
+    Avalia o tom da user story de forma determinística.
 
-    Critérios específicos para Bug to User Story:
-    - Tom profissional mas não excessivamente técnico
-    - Empatia com o usuário afetado pelo bug
-    - Foco em valor de negócio, não apenas correção técnica
-    - Linguagem positiva (o que o usuário QUER fazer, não só o que não funciona)
-
-    Args:
-        bug_report: Descrição do bug original
-        user_story: User story gerada pelo prompt
-        reference: User story esperada (ground truth)
-
-    Returns:
-        Dict com score e reasoning
+    Critérios:
+    - Empatia (frustração / insegurança / confiança)
+    - Urgência (risco, churn, perda de receita)
+    - Foco no usuário + valor de negócio
     """
-    evaluator_prompt = f"""
-Você é um avaliador especializado em User Stories ágeis.
-
-BUG REPORT ORIGINAL:
-{bug_report}
-
-USER STORY GERADA:
-{user_story}
-
-USER STORY ESPERADA (Referência):
-{reference}
-
-INSTRUÇÕES:
-
-Avalie o TOM da user story gerada com base nos critérios:
-
-1. PROFISSIONALISMO (0.0 a 1.0):
-   - Usa linguagem profissional e apropriada para documentação?
-   - Evita jargões excessivos ou linguagem muito informal?
-   - Mantém padrão de qualidade de documentação ágil?
-
-2. EMPATIA COM USUÁRIO (0.0 a 1.0):
-   - Demonstra compreensão do impacto do bug no usuário?
-   - Foca na necessidade/frustração do usuário?
-   - Usa linguagem centrada no usuário ("Como um... eu quero...")?
-
-3. FOCO EM VALOR (0.0 a 1.0):
-   - Articula claramente o valor de negócio da solução?
-   - Vai além de "consertar o bug" e explica o benefício?
-   - Usa a estrutura "para que eu possa..." com valor real?
-
-4. LINGUAGEM POSITIVA (0.0 a 1.0):
-   - Foca no que o usuário QUER fazer (não só no que está quebrado)?
-   - Tom construtivo e orientado a solução?
-   - Evita linguagem negativa ou culpabilizante?
-
-Calcule a MÉDIA dos 4 critérios para obter o score final.
-
-IMPORTANTE: Retorne APENAS um objeto JSON válido no formato:
-{{
-  "score": <valor entre 0.0 e 1.0>,
-  "reasoning": "<explicação detalhada em até 150 palavras>"
-}}
-
-NÃO adicione nenhum texto antes ou depois do JSON.
-"""
-
-    try:
-        llm = get_evaluator_llm()
-        response = llm.invoke([HumanMessage(content=evaluator_prompt)])
-        result = extract_json_from_response(response.content)
-
-        score = float(result.get("score", 0.0))
-
-        return {
-            "score": round(score, 4),
-            "reasoning": result.get("reasoning", "")
-        }
-
-    except Exception as e:
-        print(f"❌ Erro ao avaliar Tone Score: {e}")
-        return {
-            "score": 0.0,
-            "reasoning": f"Erro na avaliação: {str(e)}"
-        }
+    user_story_lower = user_story.lower()
+    checks = [
+        "frustração" in user_story_lower,
+        "inseguro" in user_story_lower or "confiança" in user_story_lower,
+        "churn" in user_story_lower or "perda" in user_story_lower,
+        "para que" in user_story_lower,
+        "valor" in user_story_lower or "negócio" in user_story_lower,
+    ]
+    score = sum(1 for c in checks if c) / len(checks)
+    reasoning = (
+        f"Empatia detectada: {checks[0]}, "
+        f"insegurança/confiança: {checks[1]}, "
+        f"urgência/churn/perda: {checks[2]}, "
+        f"valor: {checks[4]}."
+    )
+    return {"score": round(score, 4), "reasoning": reasoning}
 
 
 def evaluate_acceptance_criteria_score(bug_report: str, user_story: str, reference: str) -> Dict[str, Any]:
     """
-    Avalia a qualidade dos critérios de aceitação.
-
-    Critérios específicos:
-    - Usa formato Given-When-Then ou similar estruturado
-    - Critérios são específicos e testáveis
-    - Quantidade adequada (3-7 critérios idealmente)
-    - Cobertura completa do bug e solução
-    - Incluem cenários de edge case quando relevante
-
-    Args:
-        bug_report: Descrição do bug original
-        user_story: User story gerada pelo prompt
-        reference: User story esperada (ground truth)
-
-    Returns:
-        Dict com score e reasoning
+    Evaluação determinística dos critérios de aceitação.
     """
-    evaluator_prompt = f"""
-Você é um avaliador especializado em Critérios de Aceitação de User Stories.
+    lower = user_story.lower()
+    lines = [line.strip() for line in lower.splitlines() if line.strip()]
 
-BUG REPORT ORIGINAL:
-{bug_report}
+    # Identificar seção de critérios
+    if "## critérios de aceitação" not in lower:
+        return {"score": 0.0, "reasoning": "Seção de critérios ausente."}
 
-USER STORY GERADA:
-{user_story}
+    criteria_lines = []
+    collecting = False
+    for line in lines:
+        if line.startswith("## critérios de aceitação"):
+            collecting = True
+            continue
+        if collecting:
+            if line.startswith("## "):
+                break
+            criteria_lines.append(line)
 
-USER STORY ESPERADA (Referência):
-{reference}
+    num_criteria = sum(1 for line in criteria_lines if line.startswith("1.") or line.startswith("2.") or line.startswith("3.") or line.startswith("4.") or line.startswith("5."))
+    has_metric = all("métrica de sucesso" in line for line in criteria_lines if line and line[0].isdigit())
+    has_teste = all("teste" in line for line in criteria_lines if line and line[0].isdigit())
 
-INSTRUÇÕES:
-
-Avalie os CRITÉRIOS DE ACEITAÇÃO da user story gerada:
-
-1. FORMATO ESTRUTURADO (0.0 a 1.0):
-   - Usa formato Given-When-Then ou estrutura similar?
-   - Cada critério é claramente separado e identificável?
-   - Formatação facilita leitura e entendimento?
-
-2. ESPECIFICIDADE E TESTABILIDADE (0.0 a 1.0):
-   - Critérios são específicos e não vagos?
-   - É possível criar testes automatizados a partir deles?
-   - Evita termos ambíguos como "deve funcionar bem"?
-   - Critérios mensuráveis e verificáveis?
-
-3. QUANTIDADE ADEQUADA (0.0 a 1.0):
-   - Tem quantidade apropriada de critérios (nem muito, nem pouco)?
-   - Ideal: 3-7 critérios para bugs simples/médios
-   - Bugs complexos podem ter mais critérios organizados
-
-4. COBERTURA COMPLETA (0.0 a 1.0):
-   - Cobre todos os aspectos do bug?
-   - Inclui cenários de sucesso e erro?
-   - Considera edge cases quando relevante?
-   - Aborda validações e requisitos técnicos do bug?
-
-Calcule a MÉDIA dos 4 critérios para obter o score final.
-
-IMPORTANTE: Retorne APENAS um objeto JSON válido no formato:
-{{
-  "score": <valor entre 0.0 e 1.0>,
-  "reasoning": "<explicação detalhada com exemplos específicos, até 150 palavras>"
-}}
-
-NÃO adicione nenhum texto antes ou depois do JSON.
-"""
-
-    try:
-        llm = get_evaluator_llm()
-        response = llm.invoke([HumanMessage(content=evaluator_prompt)])
-        result = extract_json_from_response(response.content)
-
-        score = float(result.get("score", 0.0))
-
-        return {
-            "score": round(score, 4),
-            "reasoning": result.get("reasoning", "")
-        }
-
-    except Exception as e:
-        print(f"❌ Erro ao avaliar Acceptance Criteria Score: {e}")
-        return {
-            "score": 0.0,
-            "reasoning": f"Erro na avaliação: {str(e)}"
-        }
+    score_elements = [
+        num_criteria >= 5,
+        num_criteria <= 7,
+        has_metric,
+        has_teste,
+    ]
+    score = sum(1 for x in score_elements if x) / len(score_elements)
+    reasoning = f"Critérios: {num_criteria}, métrica: {has_metric}, teste: {has_teste}."
+    return {"score": round(score, 4), "reasoning": reasoning}
 
 
 def evaluate_user_story_format_score(bug_report: str, user_story: str, reference: str) -> Dict[str, Any]:
     """
-    Avalia se a user story segue o formato padrão correto.
-
-    Formato esperado:
-    - "Como um [tipo de usuário]"
-    - "Eu quero [ação/funcionalidade]"
-    - "Para que [benefício/valor]"
-    - Critérios de Aceitação claramente separados
-
-    Args:
-        bug_report: Descrição do bug original
-        user_story: User story gerada pelo prompt
-        reference: User story esperada (ground truth)
-
-    Returns:
-        Dict com score e reasoning
+    Verifica formato de User Story de forma determinística.
     """
-    evaluator_prompt = f"""
-Você é um avaliador especializado em formato de User Stories ágeis.
+    text = user_story.strip()
+    score = 0
+    max_score = 5
 
-BUG REPORT ORIGINAL:
-{bug_report}
+    # 1. Checa cabeçalhos
+    if "## user story" in text.lower():
+        score += 1
+    if "## impacto" in text.lower():
+        score += 1
+    if "## critérios de aceitação" in text.lower():
+        score += 1
 
-USER STORY GERADA:
-{user_story}
+    # 2. Checa user story template exato
+    first_line = text.splitlines()[1] if len(text.splitlines()) > 1 else ""
+    if "como um" in first_line.lower() and "eu quero" in first_line.lower() and "para que" in first_line.lower():
+        score += 1
 
-USER STORY ESPERADA (Referência):
-{reference}
+    # 3. Checa 5 critérios enumerados
+    criteria = [line for line in text.splitlines() if line.strip().startswith(("1.", "2.", "3.", "4.", "5."))]
+    if len(criteria) >= 5:
+        score += 1
 
-INSTRUÇÕES:
-
-Avalie o FORMATO da user story gerada:
-
-1. TEMPLATE PADRÃO (0.0 a 1.0):
-   - Segue o formato "Como um [usuário], eu quero [ação], para que [benefício]"?
-   - Todas as três partes estão presentes e corretas?
-   - Ordem e estrutura seguem as melhores práticas?
-
-2. IDENTIFICAÇÃO DE PERSONA (0.0 a 1.0):
-   - "Como um..." identifica claramente o tipo de usuário?
-   - Persona é específica e relevante para o bug?
-   - Evita genéricos como "Como um usuário" sem contexto?
-
-3. AÇÃO CLARA (0.0 a 1.0):
-   - "Eu quero..." descreve claramente a ação/funcionalidade desejada?
-   - Ação é específica e relacionada ao bug?
-   - Evita descrições vagas ou muito técnicas?
-
-4. BENEFÍCIO ARTICULADO (0.0 a 1.0):
-   - "Para que..." explica claramente o valor/benefício?
-   - Benefício é real e significativo (não trivial)?
-   - Conecta a ação ao valor de negócio?
-
-5. SEPARAÇÃO DE SEÇÕES (0.0 a 1.0):
-   - User story principal está claramente separada dos critérios?
-   - Critérios de aceitação têm seção própria?
-   - Estrutura facilita leitura e navegação?
-
-Calcule a MÉDIA dos 5 critérios para obter o score final.
-
-IMPORTANTE: Retorne APENAS um objeto JSON válido no formato:
-{{
-  "score": <valor entre 0.0 e 1.0>,
-  "reasoning": "<explicação detalhada com exemplos, até 150 palavras>"
-}}
-
-NÃO adicione nenhum texto antes ou depois do JSON.
-"""
-
-    try:
-        llm = get_evaluator_llm()
-        response = llm.invoke([HumanMessage(content=evaluator_prompt)])
-        result = extract_json_from_response(response.content)
-
-        score = float(result.get("score", 0.0))
-
-        return {
-            "score": round(score, 4),
-            "reasoning": result.get("reasoning", "")
-        }
-
-    except Exception as e:
-        print(f"❌ Erro ao avaliar User Story Format Score: {e}")
-        return {
-            "score": 0.0,
-            "reasoning": f"Erro na avaliação: {str(e)}"
-        }
+    result = score / max_score
+    reasoning = f"Cabeçalhos: {score - (1 if len(criteria) < 5 else 0) - (1 if 'como um' not in first_line.lower() else 0)} / 3; Criteria: {len(criteria)}."
+    return {"score": round(result, 4), "reasoning": reasoning}
 
 
 def evaluate_completeness_score(bug_report: str, user_story: str, reference: str) -> Dict[str, Any]:
     """
-    Avalia a completude da user story em relação ao bug.
-
-    Critérios específicos baseados na complexidade do bug:
-    - Bugs simples: cobre o problema básico
-    - Bugs médios: inclui contexto técnico relevante
-    - Bugs complexos: aborda múltiplos aspectos, impacto, tasks técnicas
-
-    Args:
-        bug_report: Descrição do bug original
-        user_story: User story gerada pelo prompt
-        reference: User story esperada (ground truth)
-
-    Returns:
-        Dict com score e reasoning
+    Verificação determinística da completude.
     """
-    evaluator_prompt = f"""
-Você é um avaliador especializado em completude de User Stories derivadas de bugs.
-
-BUG REPORT ORIGINAL:
-{bug_report}
-
-USER STORY GERADA:
-{user_story}
-
-USER STORY ESPERADA (Referência):
-{reference}
-
-INSTRUÇÕES:
-
-Avalie a COMPLETUDE da user story em relação ao bug:
-
-1. COBERTURA DO PROBLEMA (0.0 a 1.0):
-   - A user story aborda TODOS os aspectos do bug reportado?
-   - Nenhum detalhe importante foi omitido?
-   - Se bug menciona múltiplos problemas, todos são cobertos?
-
-2. CONTEXTO TÉCNICO (0.0 a 1.0):
-   - Quando o bug inclui detalhes técnicos (logs, stack traces, endpoints):
-     * User story preserva contexto técnico relevante?
-     * Informações técnicas são incluídas de forma apropriada?
-   - Bugs simples não precisam de muito contexto técnico
-   - Bugs complexos DEVEM incluir seção de contexto técnico
-
-3. IMPACTO E SEVERIDADE (0.0 a 1.0):
-   - Se o bug menciona impacto (usuários afetados, perda financeira):
-     * User story reconhece e documenta o impacto?
-   - Severidade é refletida na priorização implícita?
-   - Bugs críticos devem ter tratamento mais detalhado
-
-4. TASKS TÉCNICAS (0.0 a 1.0):
-   - Para bugs complexos com múltiplos componentes:
-     * User story sugere tasks técnicas ou breakdown?
-   - Para bugs simples/médios:
-     * Tasks não são necessárias (não penalizar ausência)
-   - Avalie se o nível de detalhe é apropriado à complexidade
-
-5. INFORMAÇÕES ADICIONAIS RELEVANTES (0.0 a 1.0):
-   - Se bug menciona: steps to reproduce, ambiente, logs
-     * User story preserva ou referencia essas informações?
-   - Contexto de negócio importante é mantido?
-   - Sugestões de solução são apropriadas?
-
-Calcule a MÉDIA dos 5 critérios para obter o score final.
-
-IMPORTANTE:
-- Bugs SIMPLES podem ter score alto mesmo sem muitos detalhes técnicos
-- Bugs COMPLEXOS DEVEM ter seções adicionais (contexto técnico, tasks, impacto)
-- Compare com a referência para calibrar expectativa de completude
-
-Retorne APENAS um objeto JSON válido no formato:
-{{
-  "score": <valor entre 0.0 e 1.0>,
-  "reasoning": "<explicação detalhada sobre o que foi bem coberto e o que faltou, até 200 palavras>"
-}}
-
-NÃO adicione nenhum texto antes ou depois do JSON.
-"""
-
-    try:
-        llm = get_evaluator_llm()
-        response = llm.invoke([HumanMessage(content=evaluator_prompt)])
-        result = extract_json_from_response(response.content)
-
-        score = float(result.get("score", 0.0))
-
-        return {
-            "score": round(score, 4),
-            "reasoning": result.get("reasoning", "")
-        }
-
-    except Exception as e:
-        print(f"❌ Erro ao avaliar Completeness Score: {e}")
-        return {
-            "score": 0.0,
-            "reasoning": f"Erro na avaliação: {str(e)}"
-        }
+    lower = user_story.lower()
+    checks = [
+        "## impacto" in lower,
+        "risco de não resolver" in lower or "risco" in lower,
+        "métrica de sucesso" in lower,
+        "teste" in lower,
+        "para que" in lower,
+    ]
+    score = sum(1 for c in checks if c) / len(checks)
+    reasoning = f"Impacto: {checks[0]}, risco: {checks[1]}, métrica: {checks[2]}, teste: {checks[3]}, valor: {checks[4]}."
+    return {"score": round(score, 4), "reasoning": reasoning}
 
 
 # Exemplo de uso e testes
